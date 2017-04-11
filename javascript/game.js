@@ -5,6 +5,7 @@ var InfiniteScroller = InfiniteScroller || {};
 InfiniteScroller.TheGame = function () { };
 
 var scrollSpeed = 150;
+var speedIncrease = scrollSpeed * 2;
 
 var cursors;
 var emitter;
@@ -77,7 +78,7 @@ InfiniteScroller.TheGame.prototype = {
 
         //   PLAYER   \\
         // The player and its settings
-        player = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'helo');
+        player = this.game.add.sprite(this.game.width/2, this.game.height/2, 'helo');
         player.anchor.set(0.5);
         player.scale.setTo(2);
 
@@ -100,7 +101,7 @@ InfiniteScroller.TheGame.prototype = {
         scoreText.stroke = '#000000';
         scoreText.strokeThickness = 8;
         scoreText.fill = '#43d637';
-        this.game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+        // this.game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
     },
     update: function () {
         if (player.alive) {
@@ -122,36 +123,52 @@ InfiniteScroller.TheGame.prototype = {
         player.body.velocity.x = 0;
         player.scale.setTo(2);
 
-        if (cursors.down.isDown && cursors.right.isDown) {
-            player.body.velocity.y = 200;
-            player.body.velocity.x += 200;
-            // particalBurst();
-        } else if (cursors.down.isDown && cursors.left.isDown) {
-            player.body.velocity.y = 200;
-            player.body.velocity.x += -70;
-            player.scale.setTo(-2, 2);
-        } else if (cursors.up.isDown && cursors.right.isDown) {
-            player.body.velocity.y = -200;
-            player.body.velocity.x += 200;
-            // particalBurst();
-        } else if (cursors.up.isDown && cursors.left.isDown) {
-            player.body.velocity.y = -200;
-            player.body.velocity.x += -70;
-            player.scale.setTo(-2, 2);
-            // particalBurst();
-        } else if (cursors.right.isDown) {
-            player.body.velocity.x += 200;
-            // particalBurst();
-        } else if (cursors.left.isDown) {
-            player.body.velocity.x += -70;
-            player.scale.setTo(-2, 2);
-            // particalBurst();
-        } else if (cursors.down.isDown) {
+        // if (cursors.down.isDown && cursors.right.isDown) {
+        //     player.body.velocity.y = 200;
+        //     // player.body.velocity.x += 200;
+        //     speedUp();
+        //     // particalBurst();
+        // } else if (cursors.down.isDown && cursors.left.isDown) {
+        //     player.body.velocity.y = 200;
+        //     // player.body.velocity.x += -70;
+        //     player.scale.setTo(-2, 2);
+        // } else if (cursors.up.isDown && cursors.right.isDown) {
+        //     player.body.velocity.y = -200;
+        //     // player.body.velocity.x += 200;
+        //     speedUp();
+        //     // particalBurst();
+        // } else if (cursors.up.isDown && cursors.left.isDown) {
+        //     player.body.velocity.y = -200;
+        //     player.body.velocity.x += -70;
+        //     player.scale.setTo(-2, 2);
+        //     // particalBurst();
+        // } else if (cursors.right.isDown) {
+        //     // player.body.velocity.x += 200;
+        //     speedUp()
+        //     // particalBurst();
+        // } else if (cursors.left.isDown) {
+        //     player.body.velocity.x += -70;
+        //     player.scale.setTo(-2, 2);
+        //     // particalBurst();
+        // } else if (cursors.down.isDown) {
+        //     player.body.velocity.y = 200;
+        //     // particalBurst();
+        // } else if (cursors.up.isDown) {
+        //     player.body.velocity.y = -200;
+        //     // particalBurst();
+        // }
+        if (cursors.right.isUp) {
+            normalizeSpeed();
+        } 
+        
+        if (cursors.down.isDown) {
             player.body.velocity.y = 200;
             // particalBurst();
         } else if (cursors.up.isDown) {
             player.body.velocity.y = -200;
             // particalBurst();
+        } else if (cursors.right.isDown) {
+            speedUp();
         }
 
     }
@@ -230,6 +247,15 @@ function generateWalls() {
     }
 }
 
+function normalizeSpeed() {
+    walls.forEach(function(wall) {
+        wall.body.velocity.x = -scrollSpeed;
+    });
+    stars.forEach(function(star) {
+        star.body.velocity.x = -scrollSpeed;
+    });
+}
+
 function spawnStar() {
     //  Get a dead item
     var star = stars.getFirstDead();
@@ -266,6 +292,15 @@ function spawnWall() {
         //  This just changes its frame
         // wall.frame = InfiniteScroller.game.rnd.integerInRange(0, 36);
     }
+}
+
+function speedUp() {
+    walls.forEach(function(wall) {
+        wall.body.velocity.x = -(scrollSpeed + speedIncrease);
+    });
+    stars.forEach(function(star) {
+        star.body.velocity.x = -(scrollSpeed + speedIncrease);
+    });
 }
 
 function particalBurst() {

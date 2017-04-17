@@ -25,6 +25,7 @@ InfiniteScroller.TheGame.prototype = {
         this.game.load.image('star', 'assets/star.png');
         this.game.load.image('thingy', 'assets/thingy.png');
         this.game.load.image('helo', 'assets/helo.png');
+        this.game.load.spritesheet('heloSheet', 'assets/helo-sprite-sheet.png', 96, 96);
         this.game.load.image('explode', 'assets/explosion.gif');
     },
     create: function () {
@@ -78,9 +79,13 @@ InfiniteScroller.TheGame.prototype = {
 
         //   PLAYER   \\
         // The player and its settings
-        player = this.game.add.sprite(this.game.width/2, this.game.height/2, 'helo');
+        player = this.game.add.sprite(this.game.width/2, this.game.height/2, 'heloSheet');
         player.anchor.set(0.5);
-        player.scale.setTo(2);
+        player.scale.setTo(.5);
+
+        // player.animations.add('left', [0, 1, 2, 3], 10, true);
+        player.animations.add('right', [0, 1, 2], 12, true);
+        player.animations.play('right');
 
         //  We need to enable physics on the player
         this.game.physics.arcade.enable(player);
@@ -121,7 +126,7 @@ InfiniteScroller.TheGame.prototype = {
         //  Reset the players velocity (movement) otherwise keeps sliding
         player.body.velocity.y = 0;
         player.body.velocity.x = 0;
-        player.scale.setTo(2);
+        player.scale.setTo(.5);
 
         // if (cursors.down.isDown && cursors.right.isDown) {
         //     player.body.velocity.y = 200;

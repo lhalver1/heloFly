@@ -22,6 +22,7 @@ var wraps;
 InfiniteScroller.TheGame.prototype = {
     preload: function () {
         this.game.load.image('sky', 'assets/sky.png'); //Path relative to index.html
+        this.game.load.image('clouds', 'assets/clouds.png'); //320x256
         this.game.load.image('ground', 'assets/platform.png');
         this.game.load.image('wall', 'assets/wall.png');
         this.game.load.image('star', 'assets/star.png');
@@ -40,7 +41,7 @@ InfiniteScroller.TheGame.prototype = {
         this.game.world.setBounds(0, 0, 1600, this.game.height);
 
         //  A simple background for our game
-        var background = this.game.add.tileSprite(0, 0, this.game.width + 200, this.game.height, 'sky');
+        var background = this.game.add.tileSprite(0, 0, this.game.width, this.game.height, 'sky');
 
         generateWalls();
 

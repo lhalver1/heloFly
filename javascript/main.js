@@ -1,7 +1,13 @@
 var InfiniteScroller = InfiniteScroller || {};
  
 // InfiniteScroller.game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.AUTO, '');
-InfiniteScroller.game = new Phaser.Game(800, 600, Phaser.AUTO, '');
+// InfiniteScroller.game = new Phaser.Game(800, 600, Phaser.AUTO, '');
+InfiniteScroller.game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, (window.innerHeight * window.devicePixelRatio) - 45 * window.devicePixelRatio, Phaser.AUTO, '');
+
+InfiniteScroller.settings = {
+    isMusic: true,
+    isSFX: true
+};
  
 InfiniteScroller.game.state.add('Boot', InfiniteScroller.Boot);
 InfiniteScroller.game.state.add('Preload', InfiniteScroller.Preload);

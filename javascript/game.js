@@ -34,7 +34,7 @@ InfiniteScroller.TheGame.prototype = {
         this.game.load.image('thingy', 'assets/thingy.png');
         this.game.load.image('helo', 'assets/helo.png');
         this.game.load.spritesheet('heloSheet', 'assets/helo-sprite-sheet.png', 32, 21);
-        this.game.load.spritesheet('kaboom', 'assets/explosion.png', 64, 64, 16);
+        this.game.load.spritesheet('kaboom', 'assets/explosion.png', 64, 64);
 
         this.game.load.audio('theme', ['assets/sounds/theme.mp3']);
         this.game.load.audio('kaboomSound', ['assets/sounds/kaboom.mp3']);
@@ -46,7 +46,7 @@ InfiniteScroller.TheGame.prototype = {
         //  We're going to be using physics, so enable the Arcade Physics system
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-        this.game.world.setBounds(0, 0, 1600, this.game.height);
+        this.game.world.setBounds(0, 0, this.game.width*2, this.game.height);
 
         //  A simple background for our game
         // var background = this.game.add.tileSprite(0, 0, this.game.width, this.game.height, 'sky');
@@ -73,10 +73,6 @@ InfiniteScroller.TheGame.prototype = {
         emitter.gravity.y = 150;
         emitter.bounce.setTo(0.5, 0.5);
 
-        //  An explosion pool
-        explosions = this.game.add.group();
-        explosions.createMultiple(30, 'kaboom');
-
         //   PLAYER   \\
         // The player and its settings
         player = this.game.add.sprite(this.game.width / 2, this.game.height / 2, 'heloSheet');
@@ -86,6 +82,7 @@ InfiniteScroller.TheGame.prototype = {
 
         // player.animations.add('left', [0, 1, 2, 3], 10, true);
         player.animations.add('right', [0, 1, 2], 7, true);
+        player.animations.add('boom', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 10, false);
         player.animations.play('right');
 
         //  We need to enable physics on the player
@@ -95,6 +92,11 @@ InfiniteScroller.TheGame.prototype = {
         // player.body.bounce.y = 0.2;
         player.body.gravity.y = 0;
         player.body.collideWorldBounds = true;
+
+        //  An explosion pool
+        explosions = this.game.add.group();
+        explosions.createMultiple(30, 'kaboom');
+        explosions.forEach(setupBoom, this);
 
         // MOBILE INPUT
         this.game.input.onDown.add(this.mobileControls, this);
@@ -214,13 +216,14 @@ function blowup(player, wall) {
     emitter.on = false;
     player.kill();
 
-    // Removes the star from the screen
-    var x = player.body.x;
-    var y = player.body.y;
-
+    //  And create an explosion :)
     var explosion = explosions.getFirstExists(false);
     explosion.reset(player.body.x, player.body.y);
     explosion.play('kaboom', 30, false, true);
+
+    // Removes the star from the screen
+    var x = player.body.x;
+    var y = player.body.y;
 
     setTimeout(function () {
         score = 0;
@@ -292,6 +295,10 @@ function normalizeSpeed() {
     stars.forEach(function (star) {
         star.body.velocity.x = -scrollSpeed;
     });
+}
+
+function setupBoom(invader) {
+    invader.animations.add('kaboom');
 }
 
 function spawnStar() {

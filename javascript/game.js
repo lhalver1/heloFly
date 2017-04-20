@@ -9,9 +9,14 @@ var speedIncrease = scrollSpeed * 2;
 
 var cursors;
 var emitter;
+var explosions;
+var isMusicBtn;
+var isSfxBtn;
+var music;
 var player;
 var score = 0;
 var scoreText;
+var sky;
 var speedText;
 var walls;
 var wrapping;
@@ -21,15 +26,18 @@ var wraps;
 //setting game configuration and loading the assets for the loading screen
 InfiniteScroller.TheGame.prototype = {
     preload: function () {
-        this.game.load.image('sky', 'assets/sky.png'); //Path relative to index.html
+        // this.game.load.image('sky', 'assets/sky.png'); //Path relative to index.html
+        this.game.load.image('sky', 'assets/sky1.png');
         this.game.load.image('clouds', 'assets/clouds.png'); //320x256
-        this.game.load.image('ground', 'assets/platform.png');
         this.game.load.image('wall', 'assets/wall.png');
         this.game.load.image('star', 'assets/star.png');
         this.game.load.image('thingy', 'assets/thingy.png');
         this.game.load.image('helo', 'assets/helo.png');
         this.game.load.spritesheet('heloSheet', 'assets/helo-sprite-sheet.png', 32, 21);
-        this.game.load.image('explode', 'assets/explosion.gif');
+        this.game.load.spritesheet('kaboom', 'assets/explosion.png', 64, 64, 16);
+
+        this.game.load.audio('theme', ['assets/sounds/theme.mp3']);
+        this.game.load.audio('kaboomSound', ['assets/sounds/kaboom.mp3']);
     },
     create: function () {
         scrollSpeed = 150;
@@ -41,34 +49,20 @@ InfiniteScroller.TheGame.prototype = {
         this.game.world.setBounds(0, 0, 1600, this.game.height);
 
         //  A simple background for our game
-        var background = this.game.add.tileSprite(0, 0, this.game.width, this.game.height, 'sky');
+        // var background = this.game.add.tileSprite(0, 0, this.game.width, this.game.height, 'sky');
+        // The scrolling sky background
+        sky = this.game.add.tileSprite(0, 0, window.innerWidth * window.devicePixelRatio, (window.innerHeight * window.devicePixelRatio) - 45 * window.devicePixelRatio, 'sky');
 
+        music = this.game.add.audio('theme');
+        if (InfiniteScroller.settings.isMusic) {
+            music.play();
+        }
+        //	Here we set-up our audio sprite
+	    kaboomSound = this.game.add.audio('kaboomSound');
+
+        //   STARS and WALLS   \\
+        generateStars();
         generateWalls();
-
-        //  The platforms group contains the ground and the 2 ledges we can jump on
-        platforms = this.game.add.group();
-
-        //  We will enable physics for any object that is created in this group
-        platforms.enableBody = true;
-
-        // // Here we create the ground.
-        // var ground = platforms.create(0, game.world.height - 64, 'ground');
-
-        // //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-        // ground.scale.setTo(5, 2);
-        background.scale.setTo(4, 1);
-
-        // //  This stops it from falling away when you jump on it
-        // ground.body.immovable = true;
-
-        //  Now let's create two ledges
-        // var ledge = platforms.create(400, 400, 'ground');
-
-        // ledge.body.immovable = true;
-
-        // ledge = platforms.create(-150, 250, 'ground');
-
-        // ledge.body.immovable = true;
 
         emitter = this.game.add.emitter(0, 0, 100);
         emitter.makeParticles('thingy');
@@ -79,9 +73,9 @@ InfiniteScroller.TheGame.prototype = {
         emitter.gravity.y = 150;
         emitter.bounce.setTo(0.5, 0.5);
 
-        //   STARS   \\
-        generateStars();
-
+        //  An explosion pool
+        explosions = this.game.add.group();
+        explosions.createMultiple(30, 'kaboom');
 
         //   PLAYER   \\
         // The player and its settings
@@ -102,9 +96,8 @@ InfiniteScroller.TheGame.prototype = {
         player.body.gravity.y = 0;
         player.body.collideWorldBounds = true;
 
-        //  Our two animations, walking left and right.
-        // player.animations.add('left', [0, 1, 2, 3], 10, true);
-        // player.animations.add('right', [5, 6, 7, 8], 10, true);
+        // MOBILE INPUT
+        this.game.input.onDown.add(this.mobileControls, this);
 
 
         scoreText = this.game.add.text(16, 16, 'Score: 0', { fontSize: '32px' });
@@ -118,19 +111,54 @@ InfiniteScroller.TheGame.prototype = {
         speedText.stroke = '#000000';
         speedText.strokeThickness = 8;
         speedText.fill = '#43d637';
-        // this.game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+        
+        // Sound toggles
+        isMusicBtn = this.game.add.text(this.game.width - 150, 16, 'Music', { font: '14px Arial' });
+        if (InfiniteScroller.settings.isMusic) {
+            isMusicBtn.addColor('#ffffff', 0);
+        } else {
+            isMusicBtn.addColor('#ff0000', 0);
+        }
+        isMusicBtn.inputEnabled = true;
+        isMusicBtn.events.onInputUp.add(function () {
+            if (InfiniteScroller.settings.isMusic) {
+                music.pause();
+                isMusicBtn.addColor('#ff0000', 0);
+            } else if (!InfiniteScroller.settings.isMusic) {
+                music.resume();
+                isMusicBtn.addColor('#ffffff', 0);
+            }
+
+            InfiniteScroller.settings.isMusic = !InfiniteScroller.settings.isMusic;
+        });
+        isSfxBtn = this.game.add.text(this.game.width - 100, 16, 'SFX', { font: '14px Arial' });
+        if (InfiniteScroller.settings.isSFX) {
+            isSfxBtn.addColor('#ffffff', 0);
+        } else {
+            isSfxBtn.addColor('#ff0000', 0);
+        }
+        isSfxBtn.inputEnabled = true;
+        isSfxBtn.events.onInputUp.add(function () {
+            if (InfiniteScroller.settings.isSFX) {
+                isSfxBtn.addColor('#ff0000', 0);
+            } else if(!InfiniteScroller.settings.isSFX) {
+                isSfxBtn.addColor('#ffffff', 0);
+            }
+            InfiniteScroller.settings.isSFX = !InfiniteScroller.settings.isSFX;
+        });
     },
     update: function () {
+        //  Scroll the background
+        sky.tilePosition.x -= 2;
+
         spawnWall();
         spawnStar();
-
-        //  Collide the player and the stars with the platforms
-        var hitPlatform = this.game.physics.arcade.collide(player, platforms);
 
         this.game.physics.arcade.overlap(player, stars, collectStar, null, this);
         this.game.physics.arcade.collide(player, walls, blowup, null, this);
 
         if (player.isAlive) {
+            player.angle = 0;
             var cursors = this.game.input.keyboard.createCursorKeys();
 
             //  Reset the players velocity (movement) otherwise keeps sliding
@@ -142,9 +170,11 @@ InfiniteScroller.TheGame.prototype = {
             }
 
             if (cursors.down.isDown) {
+                player.angle = 45;
                 player.body.velocity.y = 200;
                 // particalBurst();
             } else if (cursors.up.isDown) {
+                player.angle = -45;
                 player.body.velocity.y = -200;
                 // particalBurst();
             } else if (cursors.right.isDown) {
@@ -153,12 +183,28 @@ InfiniteScroller.TheGame.prototype = {
             }
         }
 
+    },
+    mobileControls: function(pointer) {
+        if (pointer.y > this.game.height/2 && pointer.x > this.game.width/2) {
+            player.angle = -45;
+            player.body.velocity.y = -200;
+        } else if (pointer.y > this.game.height/2 && pointer.x < this.game.width/2) {
+            player.angle = 45;
+            player.body.velocity.y = 200;
+        }
     }
 };
 
 
 //   My Functions   \\
 function blowup(player, wall) {
+    if (InfiniteScroller.settings.isMusic) {
+        music.pause();
+    }
+    if (InfiniteScroller.settings.isSFX) {
+        kaboomSound.play();
+    }
+
     player.isAlive = false;
     stopMoving();
     speedText.text = 'Speed: 0 mph';
@@ -171,8 +217,10 @@ function blowup(player, wall) {
     // Removes the star from the screen
     var x = player.body.x;
     var y = player.body.y;
-    xplode = this.game.add.sprite(x, y, 'explode');
-    xplode.anchor.set(0.5);
+
+    var explosion = explosions.getFirstExists(false);
+    explosion.reset(player.body.x, player.body.y);
+    explosion.play('kaboom', 30, false, true);
 
     setTimeout(function () {
         score = 0;

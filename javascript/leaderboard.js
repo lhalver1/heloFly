@@ -54,8 +54,6 @@ InfiniteScroller.Leaderboard.prototype = {
         scoreboardHeaderText = this.game.add.text(this.game.width / 2, this.game.height / 2 - 60, '', scoreboardStyle);
         scoreboardHeaderText.anchor.setTo(0.5, 0.5);
         scoreboardHeaderText.parseList(headings);
-
-        writeNewPost("LJH", 880);
     },
     update: function () {
         //  Scroll the background
